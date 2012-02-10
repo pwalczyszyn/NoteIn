@@ -1,0 +1,63 @@
+body {
+    font-family: "Roboto", "Droid Sans", "Helvetica Neue";
+    background-color: #0b0b0b;
+    color: white;
+    font-size: 19px;
+    margin: auto;
+}
+
+.input-error {
+    border-color: red;
+}
+
+.top-header {
+    text-align: center;
+    color: #38bcf5;
+}
+
+#welcome-question-p {
+    text-align: center;
+    color: #38bcf5;
+}
+
+.login-signup-inputs {
+    color: white;
+    background-color: #1c1c1c;
+    border-bottom-style: solid;
+    border-bottom-color: #1d2f36;
+    border-bottom-width: 1px;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    height: 50px;
+    text-indent: 10px;
+}
+
+#lst-notes > li {
+    background-color: #1c1c1c;
+    border-bottom-style: solid;
+    border-bottom-color: #1d2f36;
+    border-bottom-width: 1px;
+    border-left: none;
+    border-right: none;
+
+    color: #38bcf5;
+}
+
+#txt-notelistitem-created-at {
+    font-size: 0.7em;
+}
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#txt-note-content {
+    font-size: 19px;
+    color: white;
+    border: none;
+    font-family: "Helvetica Neue";
+    background-color: #1c1c1c;
+}

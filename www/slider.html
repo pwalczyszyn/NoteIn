@@ -1,0 +1,68 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+
+    <script type="text/template" id="cmp2-tmpl">
+        <div id="cmp2" style="position: absolute; background-color: red; width: 100%; height: 100%;">
+            xxx
+        </div>
+
+    </script>
+
+    <script type="text/javascript">
+        function slide() {
+//            var tmpl = $($("#cmp2-tmpl").html());
+//            tmpl.css('top', 0);
+//            tmpl.css('left', $("#cmp1").width());
+//
+//            $('#container').append(tmpl);
+
+            var hideView = $('#v1');
+            var showView = $('#v2');
+
+            var wrapped = $('#wrapped');//$('<div/>');
+//            wrapped.css('position', 'absolute');
+//            wrapped.css('width', '100%');
+//            wrapped.css('height', '100%');
+//            wrapped.css('left', 0);
+
+//            hideView.add(showView).wrapAll(wrapped);
+
+//            wrapped.append(hideView).append(showView);
+//            $('#container').html(wrapped);
+
+            wrapped.on('webkitTransitionEnd', function () {
+                console.log('transition ended');
+
+                wrapped.replaceWith(wrapped.contents());
+            });
+
+            wrapped.css('-webkit-transition', 'all 1s linear 1s');
+            wrapped.css('-webkit-transform', 'translateX(-480px)');
+        }
+    </script>
+</head>
+<body>
+
+<div id="container" style="position: absolute; top: 10px; left: 10px; width: 480px; height: 400px; ">
+    <!--overflow: hidden; -->
+    <div id="wrapped" style="position: absolute; width: 100%; height: 100%; left: 0px; ">
+
+        <div id="v1" style="position: absolute; background-color: green; width: 100%; height: 100%">
+            View 1
+        </div>
+
+        <div id="v2" style="position: absolute; background-color: red; width: 100%; height: 100%; left: 480px">
+            View 2
+        </div>
+    </div>
+
+</div>
+
+<button onclick="slide()" style="position: absolute; left: 500px">&lt;</button>
+
+</body>
+</html>
