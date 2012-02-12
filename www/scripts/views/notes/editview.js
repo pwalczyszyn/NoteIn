@@ -48,7 +48,7 @@ define([
                 this.model.save('content', $('#txt-note-content').val());
             }
 
-            this.navigator.popView();
+            this.viewNavigator.popView();
         }
     });
 

@@ -1,9 +1,11 @@
 /**
- * Created by JetBrains PhpStorm.
+ * This library is an extension to Backbone that allows you to do nice view navigation.
+ * It is
+ *
  * User: pwalczys
  * Date: 2/8/12
  * Time: 4:38 PM
- * To change this template use File | Settings | File Templates.
+ *
  */
 
 (function (root, factory) {
@@ -25,14 +27,14 @@
     }
 }(this, function (root, BackStack, _, $, Backbone) {
 
-    var ViewNavigatorSlideEffect = BackStack.ViewNavigatorSlideEffect = function (navigator) {
-        this.navigator = navigator;
+    var ViewNavigatorSlideEffect = BackStack.ViewNavigatorSlideEffect = function (viewNavigator) {
+        this.viewNavigator = viewNavigator;
     };
-    ViewNavigatorSlideEffect.prototype.play = function (hideView, showView, action) {
+    ViewNavigatorSlideEffect.prototype.play = function (hideView, showView, direction, callback, context) {
 
         var supportedBrowsers = ['webkit', 'moz', 'ms', 'o', ''];
-        var hideViewTransitionParams = 'all 0.5s linear 0.1s';
-        var showViewTransitionParams = 'all 0.5s linear 0.1s';
+        var hideViewTransitionParams = 'all 0.4s ease-out 0.1s';
+        var showViewTransitionParams = 'all 0.4s ease-out 0.1s';
 
         var clearTransitionsMap = {};
         var hideViewTransitionsMap = {};
@@ -48,7 +50,7 @@
                 hideViewTransitionsMap['-' + supportedBrowsers[i] + '-transition'] = hideViewTransitionParams;
                 showViewTransitionsMap['-' + supportedBrowsers[i] + '-transition'] = showViewTransitionParams;
 
-                transformsMap['-' + supportedBrowsers[i] + '-transform'] = 'translateX(' + (action == 'push' ? -this.navigator.width() : this.navigator.width()) + 'px)';
+                transformsMap['-' + supportedBrowsers[i] + '-transform'] = 'translateX(' + (direction == 'left' ? -this.viewNavigator.width() : this.viewNavigator.width()) + 'px)';
 
                 if (supportedBrowsers[i] != 'ms') transitionEndEvents += ' ' + supportedBrowsers[i] + 'TransitionEnd ';
                 else transitionEndEvents += ' MSTransitionEnd ';
@@ -57,49 +59,51 @@
                 hideViewTransitionsMap['transition'] = hideViewTransitionParams;
                 showViewTransitionsMap['transition'] = showViewTransitionParams;
 
-                transformsMap['transform'] = 'translateX(' + (action == 'push' ? -this.navigator.width() : this.navigator.width()) + 'px)';
+                transformsMap['transform'] = 'translateX(' + (direction == 'left' ? -this.viewNavigator.width() : this.viewNavigator.width()) + 'px)';
 
                 transitionEndEvents += ' transitionend ';
             }
         }
 
+        var slides;
+        var activeTransitions = 0;
+
+        var transitionEndHandler = function (event) {
+            activeTransitions--;
+            $(event.target).css(clearTransitionsMap);
+
+            if (activeTransitions == 0 && callback) {
+                callback.call(context);
+            }
+        };
+
         if (hideView) {
+            hideView.one(transitionEndEvents, transitionEndHandler);
+            hideView.css('left', 0);
+            hideView.css(hideViewTransitionsMap);
 
-            hideView.$el.one(transitionEndEvents, function (event) {
-                hideView.$el.css(clearTransitionsMap);
-
-                if (hideView.destructionPolicy == 'never') {
-                    hideView.$el.detach();
-
-                } else {
-                    hideView.$el.remove();
-                    hideView.instance = null;
-                }
-            });
-
-            hideView.$el.css('left', 0);
-            hideView.$el.css(hideViewTransitionsMap);
-            hideView.$el.css(transformsMap);
+            activeTransitions++;
+            slides = hideView;
         }
 
         if (showView) {
+            showView.one(transitionEndEvents, transitionEndHandler);
+            showView.css('left', direction == 'left' ? this.viewNavigator.width() : -this.viewNavigator.width());
+            showView.css(showViewTransitionsMap);
 
-            showView.$el.one(transitionEndEvents, function (event) {
-                showView.$el.css(clearTransitionsMap);
-            });
+            this.viewNavigator.append(showView);
 
-            if (action == 'push') {
-                showView.$el.css('left', this.navigator.width());
-            } else {
-                showView.$el.css('left', -this.navigator.width());
-            }
-            this.navigator.append(showView.$el);
+            activeTransitions++;
+            if (slides) slides = slides.add(showView);
+            else slides = showView;
+        }
 
-            // This is a hack, for some reason it doesn't work without calling width
-            this.navigator.css('width');
+        if (slides) {
+            // This is a hack to force DOM reflow before transition starts
+            this.viewNavigator.css('width');
 
-            showView.$el.css(showViewTransitionsMap);
-            showView.$el.css(transformsMap);
+            // Trigger transitions
+            slides.css(transformsMap);
         }
     };
 
@@ -134,10 +138,10 @@
         // Posible options auto or never
         destructionPolicy:"auto",
 
-        navigator:undefined,
+        viewNavigator:undefined,
 
-        setNavigator:function (navigator, navigationOptions) {
-            this.navigator = navigator;
+        setViewNavigator:function (viewNavigator, navigationOptions) {
+            this.viewNavigator = viewNavigator;
 
             if (navigationOptions) {
                 if (navigationOptions.destructionPolicy)
@@ -164,7 +168,7 @@
                 hideViewRef = this.viewsStack[this.viewsStack.length - 1];
 
             showView = new viewClass(options);
-            showView.setNavigator(this, options ? options.navigationOptions : null);
+            showView.setViewNavigator(this, options ? options.navigationOptions : null);
 
             var event = new ViewNavigatorEvent('push', hideViewRef ? hideViewRef.viewClass : null,
                 hideViewRef ? hideViewRef.instance : null, viewClass, showView);
@@ -174,7 +178,17 @@
                 this.viewsStack.push({instance:showView, viewClass:viewClass, options:options});
 
                 var slideEffect = new ViewNavigatorSlideEffect(this.$el);
-                slideEffect.play(hideViewRef ? hideViewRef.instance : null, showView.render(), 'push');
+                slideEffect.play(hideViewRef ? hideViewRef.instance.$el : null, showView.render().$el, 'left',
+                    function () {
+                        if (hideViewRef) {
+                            if (hideViewRef.instance.destructionPolicy == 'never') {
+                                hideViewRef.instance.$el.detach();
+                            } else {
+                                hideViewRef.instance.$el.remove();
+                                hideViewRef.instance = null;
+                            }
+                        }
+                    }, this);
             }
         },
 
@@ -197,11 +211,15 @@
                 if (showViewRef && !showViewRef.instance) {
                     var viewClass = showViewRef.viewClass;
                     showViewRef.instance = new viewClass(showViewRef.options);
-                    showViewRef.instance.setNavigator(this, showViewRef.options ? showViewRef.options.navigationOptions : null);
+                    showViewRef.instance.setViewNavigator(this, showViewRef.options ? showViewRef.options.navigationOptions : null);
                     showViewRef.instance.render();
                 }
                 var slideEffect = new ViewNavigatorSlideEffect(this.$el);
-                slideEffect.play(hideViewRef.instance, showViewRef ? showViewRef.instance : null, 'pop');
+                slideEffect.play(hideViewRef.instance.$el, showViewRef ? showViewRef.instance.$el : null, 'right',
+                    function () {
+                        hideViewRef.instance.$el.remove();
+                        hideViewRef.instance = null;
+                    }, this);
             }
         }
     });

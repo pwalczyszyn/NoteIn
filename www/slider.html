@@ -3,66 +3,59 @@
 <html>
 <head>
     <title></title>
-    <script src="http://code.jquery.com/jquery-latest.js"></script>
-
-    <script type="text/template" id="cmp2-tmpl">
-        <div id="cmp2" style="position: absolute; background-color: red; width: 100%; height: 100%;">
-            xxx
-        </div>
-
-    </script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
 
     <script type="text/javascript">
         function slide() {
-//            var tmpl = $($("#cmp2-tmpl").html());
-//            tmpl.css('top', 0);
-//            tmpl.css('left', $("#cmp1").width());
-//
-//            $('#container').append(tmpl);
 
             var hideView = $('#v1');
             var showView = $('#v2');
 
-            var wrapped = $('#wrapped');//$('<div/>');
-//            wrapped.css('position', 'absolute');
-//            wrapped.css('width', '100%');
-//            wrapped.css('height', '100%');
-//            wrapped.css('left', 0);
+            var wrapped = $('<div/>');
 
-//            hideView.add(showView).wrapAll(wrapped);
-
-//            wrapped.append(hideView).append(showView);
-//            $('#container').html(wrapped);
+            wrapped.css({
+                position:'absolute',
+                background:'none',
+                width:'100%',
+                height:'100%',
+                '-webkit-transition':'all 0.4s ease-out 0.1s'
+            });
 
             wrapped.on('webkitTransitionEnd', function () {
                 console.log('transition ended');
-
                 wrapped.replaceWith(wrapped.contents());
+                $('#v2').css('left', 0);
             });
 
-            wrapped.css('-webkit-transition', 'all 1s linear 1s');
+            $('#container').append(wrapped.append(hideView.add(showView)));
+
+            // Forcing DOM reflow
+            var left = window.getComputedStyle(wrapped[0]).getPropertyValue('left');
+            // Triggering transition
             wrapped.css('-webkit-transform', 'translateX(-480px)');
         }
+
     </script>
+
 </head>
 <body>
 
 <div id="container" style="position: absolute; top: 10px; left: 10px; width: 480px; height: 400px; ">
     <!--overflow: hidden; -->
-    <div id="wrapped" style="position: absolute; width: 100%; height: 100%; left: 0px; ">
+    <!--<div id="wrapped" style="position: absolute; width: 960px; height: 100%; left: 0px; ">-->
 
-        <div id="v1" style="position: absolute; background-color: green; width: 100%; height: 100%">
-            View 1
-        </div>
-
-        <div id="v2" style="position: absolute; background-color: red; width: 100%; height: 100%; left: 480px">
-            View 2
-        </div>
+    <div id="v1" style="position: absolute; background-color: green; width: 480px; height: 100%">
+        View 1
     </div>
+
+    <div id="v2" style="position: absolute; background-color: red; width: 480px; height: 100%; left: 480px">
+        View 2
+    </div>
+    <!--</div>-->
 
 </div>
 
-<button onclick="slide()" style="position: absolute; left: 500px">&lt;</button>
+<button onclick="slide()" style="position: absolute; left: 500px">wrap</button>
 
 </body>
 </html>
